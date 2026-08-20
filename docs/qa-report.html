@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Calidad API - QR Técnicos</title>
+  <style>
+    :root {
+      --color-bg: #f7f8fa;
+      --color-surface: #ffffff;
+      --color-text: #1f2937;
+      --color-muted: #6b7280;
+      --color-border: #e5e7eb;
+      --color-accent: #1e40af;
+      --color-accent-soft: #dbeafe;
+      --color-success: #047857;
+      --color-warn: #b45309;
+      --color-danger: #b91c1c;
+      --color-code-bg: #f3f4f6;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 28px 80px;
+    }
+    h1, h2, h3, h4, h5 {
+      color: #111827;
+      line-height: 1.3;
+      margin-top: 1.8em;
+      margin-bottom: 0.6em;
+      font-weight: 600;
+    }
+    h1 {
+      font-size: 2em;
+      border-bottom: 2px solid var(--color-accent);
+      padding-bottom: 0.3em;
+      margin-top: 0;
+    }
+    h2 {
+      font-size: 1.5em;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 0.25em;
+    }
+    h3 { font-size: 1.2em; }
+    h4 { font-size: 1.05em; color: var(--color-accent); }
+    p { margin: 0.7em 0; }
+    a { color: var(--color-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    hr {
+      border: 0;
+      border-top: 1px solid var(--color-border);
+      margin: 2.2em 0;
+    }
+    /* Tablas */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1.2em 0;
+      background: var(--color-surface);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 0.94em;
+    }
+    thead {
+      background: var(--color-accent);
+      color: #ffffff;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: top;
+    }
+    th {
+      font-weight: 600;
+      font-size: 0.92em;
+      letter-spacing: 0.02em;
+    }
+    tbody tr:nth-child(even) { background: #fafbfc; }
+    tbody tr:hover { background: #f1f5f9; }
+    td code, th code { font-size: 0.92em; }
+    /* Tabla de metadatos del proyecto (estilo sobrio, sin header azul) */
+    table.meta-table {
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin: 0.5em 0 1.4em 0;
+      font-size: 0.92em;
+      border-left: 3px solid var(--color-accent);
+    }
+    table.meta-table thead { display: none; }
+    table.meta-table th, table.meta-table td {
+      border-bottom: 1px solid #eef0f3;
+      padding: 9px 14px;
+    }
+    table.meta-table th {
+      width: 220px;
+      color: var(--color-muted);
+      font-weight: 600;
+      background: #f3f4f6;
+      text-transform: uppercase;
+      font-size: 0.78em;
+      letter-spacing: 0.05em;
+    }
+    table.meta-table td { background: var(--color-surface); }
+    table.meta-table tr:last-child th,
+    table.meta-table tr:last-child td { border-bottom: none; }
+    /* Codigo */
+    code {
+      font-family: "SF Mono", Monaco, Menlo, Consolas, "Courier New", monospace;
+      background: var(--color-code-bg);
+      color: #be185d;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.88em;
+    }
+    pre {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 16px 18px;
+      border-radius: 6px;
+      overflow-x: auto;
+      line-height: 1.5;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      font-size: inherit;
+    }
+    /* Blockquotes */
+    blockquote {
+      margin: 1em 0;
+      padding: 10px 16px;
+      border-left: 4px solid var(--color-accent);
+      background: var(--color-accent-soft);
+      color: #1e3a8a;
+      border-radius: 0 4px 4px 0;
+    }
+    /* Listas */
+    ul, ol {
+      padding-left: 1.6em;
+      margin: 0.6em 0;
+    }
+    li { margin: 0.3em 0; }
+    /* Imagenes */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 1em auto;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    /* Texto fuerte */
+    strong { color: #111827; font-weight: 600; }
+    em { color: #374151; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Reporte QA Integrado — Plan y Ejecución de Pruebas</h1>
+<h3>Microservicio de Órdenes de Reclamo</h3>
+<table class="meta-table">
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Proyecto</strong></td>
+<td>Microservicio de Órdenes de Reclamo (NestJS + BullMQ + Redis + Postgres + Keycloak)</td>
+</tr>
+<tr>
+<td><strong>Repositorio</strong></td>
+<td><code>git@github.com:GrupoConex/microservicio-ordenes-reclamo.git</code></td>
+</tr>
+<tr>
+<td><strong>Endpoint bajo prueba</strong></td>
+<td><code>POST https://api.qa.mock.com/v2/companies/{companyId}/orders</code></td>
+</tr>
+<tr>
+<td><strong>Responsables</strong></td>
+<td>QA Engineer · QA Engineer 2</td>
+</tr>
+<tr>
+<td><strong>Fecha de ejecución</strong></td>
+<td>2026-08-17</td>
+</tr>
+<tr>
+<td><strong>Entorno</strong></td>
+<td>Producción <code>https://api.qa.mock.com</code> (Cloudflare + Railway)</td>
+</tr>
+<tr>
+<td><strong>Herramienta</strong></td>
+<td>Playwright (<code>APIRequestContext</code>, sin navegador) — suite <code>.qa/tests</code></td>
+</tr>
+<tr>
+<td><strong>Detalle de aserciones</strong></td>
+<td><a href="assertion-report.html">Ver reporte de la última corrida automatizada</a> (PASS/FAIL por caso)</td>
+</tr>
+<tr>
+<td><strong>Estado</strong></td>
+<td>32 casos planificados · <strong>24 automatizados</strong> (23 PASS · 1 FAIL) · <strong>8 manuales</strong> (6 Correcto · 2 pendientes) · <strong>5 hallazgos</strong>: 2 En fix · 2 Asignado · 1 Cerrado</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>1. Resumen Ejecutivo</h2>
+<p>Se ejecutaron <strong>29 de los 31 casos planificados</strong> contra producción (24 automatizados + 5 manuales). De estos, <strong>28 resultaron correctos y 1 falló</strong> (TC-013). Los 2 casos manuales restantes requieren entorno controlado y quedan pendientes. El flujo de éxito responde <strong>201</strong> con envelope estándar, la validación del DTO devuelve <strong>422</strong> <code>VALIDATION_ERROR</code> con sus detalles, la idempotencia por <code>Idempotency-Key</code> funciona correctamente y el pipeline de guards e interceptores se comporta como se espera. Se detectaron <strong>5 hallazgos</strong>: <strong>BUG-001</strong> (body &gt;100KB devuelve 500 en vez de 4xx — en fix), <strong>BUG-002</strong> (DTO sin <code>@MaxLength</code> — en fix), <strong>BUG-003</strong> (no existe endpoint para listar órdenes — asignado), <strong>BUG-004</strong> (licencia SAE viaja en el body — cerrado) y <strong>BUG-005</strong> (<code>nationalId</code> aceptaba guiones — fix aplicado, asignado).</p>
+<hr>
+<h2>2. Objetivo y Alcance</h2>
+<ul>
+<li>Verificar que el endpoint <code>POST /v2/companies/{companyId}/orders</code> cumple el <strong>contrato definido en el código auditado</strong> del repositorio: envelope <code>{ data, error, meta }</code>, status codes y el pipeline real de guards, pipes e interceptores.</li>
+<li>Contrastar los <strong>30 casos del plan</strong> (TC-001..TC-030) contra la implementación (auditoría caso a caso) y contra el comportamiento del <strong>entorno desplegado</strong> (<code>https://api.qa.mock.com</code>).</li>
+<li>Diseñar y ejecutar la <strong>suite automatizada</strong> (22 casos) con la aserción exacta que falló y su motivo.</li>
+</ul>
+<p><strong>Fuera de alcance:</strong> <code>GET /health</code> y cualquier otro endpoint; UI / navegador (la suite usa solo <code>APIRequestContext</code>); pruebas de carga, rendimiento y seguridad ofensiva.</p>
+<hr>
+<h2>3. Pipeline del Request (orden real de ejecución)</h2>
+<pre><code>POST /v2/companies/{companyId}/orders
+  └─ 1. ThrottlerGuard               → 429 RATE_LIMITED si &gt;5/min por IP (corre antes de la auth)
+  └─ 2. KeycloakIntrospectionGuard   → 401 si Bearer inactivo/ausente
+  └─ 3. QuotaGuard                   → 429 QUOTA_EXCEEDED si &gt;100/día (consume cuota incluso con body inválido)
+  └─ 4. IdempotencyInterceptor       → 422 si falta Idempotency-Key / 201 cached si la key ya existe
+  └─ 5. CompanyValidationPipe        → 404 Not Found si UUID no registrado (comportamiento del despliegue)
+  └─ 6. ValidationPipe (DTO)         → 422 VALIDATION_ERROR si body inválido
+  └─ 7. CreateOrderService.execute() → encola job en BullMQ
+  └─ 8. CreateOrderProcessor (async) → POST hacia SAE (regional)
+  └─ 9. ResponseEnvelopeInterceptor + ApiStandardExceptionFilter → todo response en { data, error, meta }
+</code></pre>
+<p>Toda respuesta (éxito o error) va envuelta en <strong><code>{ data, error, meta }</code></strong> con <code>traceId = trc-&lt;uuid&gt;</code>.</p>
+<hr>
+<h2>4. Matriz de Casos de Prueba y Resultados</h2>
+<h3>4.1 Auth / Headers (<code>KeycloakIntrospectionGuard</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Caso</th>
+<th>Prioridad</th>
+<th>Tipo</th>
+<th>Nivel</th>
+<th>Automatización</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TC-001</td>
+<td>Enviar una orden válida con un token Bearer activo de Keycloak → <strong>201</strong> con el envelope de éxito (<code>message: &quot;Order creation process initiated&quot;</code>, <code>status: &quot;queued&quot;</code>)</td>
+<td>P0</td>
+<td>Funcional</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-002</td>
+<td>Enviar la petición sin la cabecera <code>Authorization</code> → <strong>401</strong> con <code>{ &quot;message&quot;: &quot;Missing JWT token in request&quot; }</code> (respuesta del guard del despliegue, sin envelope)</td>
+<td>P0</td>
+<td>Seguridad</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-003</td>
+<td>Enviar un token Bearer inválido o revocado → <strong>400</strong> con <code>invalid_grant</code> (error crudo de Keycloak, sin envelope)</td>
+<td>P0</td>
+<td>Seguridad</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-004</td>
+<td>Enviar un token Bearer vacío (solo el prefijo <code>Bearer </code> sin token) → <strong>400</strong> con <code>invalid_grant</code> (error crudo de Keycloak, sin envelope)</td>
+<td>P0</td>
+<td>Seguridad</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-005</td>
+<td>Enviar un token Bearer malformado (sin el prefijo <code>Bearer </code>) → <strong>400</strong> con <code>invalid_grant</code> (error crudo de Keycloak, sin envelope)</td>
+<td>P0</td>
+<td>Seguridad</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-006</td>
+<td>Enviar la petición sin la cabecera <code>Idempotency-Key</code> → <strong>422</strong> con <code>VALIDATION_ERROR</code> y el detalle <code>Idempotency-Key header is required</code></td>
+<td>P0</td>
+<td>Idempotencia</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-007</td>
+<td>Enviar la petición con el servidor de Keycloak caído o inaccesible → <strong>401</strong> con <code>UNAUTHORIZED</code> y el mensaje <code>Invalid or expired token</code></td>
+<td>P0</td>
+<td>Resiliencia</td>
+<td>integration</td>
+<td>manual</td>
+<td>Correcto</td>
+</tr>
+</tbody></table>
+<h3>4.2 Validación DTO (<code>ValidationPipe</code> + <code>class-validator</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Caso</th>
+<th>Prioridad</th>
+<th>Tipo</th>
+<th>Nivel</th>
+<th>Automatización</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TC-008</td>
+<td>Enviar el body sin el campo <code>orderDetailId</code> → <strong>422</strong> con <code>VALIDATION_ERROR</code> y los detalles <code>must be a string</code> y <code>should not be empty</code> para ese campo</td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-009</td>
+<td>Enviar <code>orderDetailId</code> como número en vez de texto → <strong>422</strong> con <code>VALIDATION_ERROR</code> y el detalle <code>must be a string</code></td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-010</td>
+<td>Enviar una propiedad extra no definida (<code>extraField</code>) → <strong>422</strong> con <code>VALIDATION_ERROR</code> y el detalle <code>property extraField should not exist</code></td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-011</td>
+<td>Enviar <code>nationalId</code> vacío (<code>&quot;&quot;</code>) → <strong>422</strong> con <code>VALIDATION_ERROR</code> y el detalle <code>should not be empty</code></td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-012</td>
+<td>Enviar el body vacío <code>{}</code> → <strong>422</strong> con <code>VALIDATION_ERROR</code> y los 8 detalles (los 4 campos con <code>must be a string</code> y <code>should not be empty</code>)</td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-013</td>
+<td>2 escenarios: (1) enviar <code>orderDetails</code> Y <code>orderDetailId</code> <strong>ambos</strong> de 5000 caracteres → <strong>201</strong> (el DTO no limita la longitud → BUG-002); (2) enviar un body total mayor a 100 KB con el exceso aportado por <strong>ambos</strong> campos (orderDetails 60k + orderDetailId 60k) → <strong>4xx</strong> limpio, nunca 500 (el límite del parser aplica al body total → BUG-001)</td>
+<td>P2</td>
+<td>Borde</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td><strong>Fallido</strong> (BUG-001)</td>
+</tr>
+<tr>
+<td>TC-014</td>
+<td>Enviar caracteres unicode y emojis en <code>orderDetails</code> → <strong>201</strong> con el envelope de éxito</td>
+<td>P2</td>
+<td>Borde</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-015</td>
+<td>Enviar <code>nationalId</code> con guiones (ej. <code>V-12345678</code>) o caracteres no numéricos → <strong>422</strong> con <code>VALIDATION_ERROR</code> y el detalle <code>nationalId debe contener solo números, sin letras ni guiones</code></td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+</tbody></table>
+<h3>4.3 <code>CompanyValidationPipe</code> (path param)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Caso</th>
+<th>Prioridad</th>
+<th>Tipo</th>
+<th>Nivel</th>
+<th>Automatización</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TC-015</td>
+<td>Usar un <code>companyId</code> con código de región (<code>do</code>/<code>pe</code>/<code>ve</code>/<code>us</code>) → <strong>404</strong> con <code>Not Found</code> (respuesta del despliegue, sin envelope)</td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-016</td>
+<td>Usar un <code>companyId</code> con UUID válido pero no registrado → <strong>404</strong> con <code>Not Found</code> (respuesta del despliegue, sin envelope)</td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-017</td>
+<td>Usar un <code>companyId</code> que no es UUID (ej. <code>xyz</code>) → <strong>404</strong> con <code>Not Found</code> (respuesta del despliegue, sin envelope)</td>
+<td>P0</td>
+<td>Validación</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-018</td>
+<td>Usar un <code>companyId</code> UUID válido en MAYÚSCULAS → <strong>404</strong> con <code>Not Found</code> (respuesta del despliegue, sin envelope)</td>
+<td>P1</td>
+<td>Mapeo</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-019</td>
+<td>Usar un <code>companyId</code> con path traversal (<code>../../etc/passwd</code>) → <strong>403</strong> con <code>Forbidden</code> del WAF de Cloudflare, sin envelope</td>
+<td>P0</td>
+<td>Seguridad</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+</tbody></table>
+<h3>4.4 Idempotencia HTTP (<code>IdempotencyInterceptor</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Caso</th>
+<th>Prioridad</th>
+<th>Tipo</th>
+<th>Nivel</th>
+<th>Automatización</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TC-020</td>
+<td>Enviar dos veces la misma <code>Idempotency-Key</code> → la segunda petición devuelve <strong>201</strong> con exactamente la misma respuesta de la primera (desde la cache)</td>
+<td>P0</td>
+<td>Idempotencia</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-021</td>
+<td>Enviar la misma <code>Idempotency-Key</code> para las empresas DO y PE → ambas responden <strong>201</strong> con el envelope de éxito (la cache es por empresa, no colisionan)</td>
+<td>P0</td>
+<td>Idempotencia</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-022</td>
+<td>Enviar una <code>Idempotency-Key</code> de más de 200 caracteres → <strong>201</strong> con el envelope de éxito</td>
+<td>P2</td>
+<td>Borde</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-023</td>
+<td>Enviar una <code>Idempotency-Key</code> con espacios o caracteres unicode → <strong>201</strong> con el envelope de éxito</td>
+<td>P2</td>
+<td>Borde</td>
+<td>integration</td>
+<td>auto-CI</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-024</td>
+<td>Borrar de Redis la cache de la <code>Idempotency-Key</code> antes de que expire y reenviar la petición → <strong>201</strong> con el envelope de éxito y un job nuevo (el handler se ejecuta de nuevo)</td>
+<td>P1</td>
+<td>Idempotencia</td>
+<td>integration</td>
+<td>manual</td>
+<td>Correcto</td>
+</tr>
+</tbody></table>
+<h3>4.5 Throttling y Quota</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Caso</th>
+<th>Prioridad</th>
+<th>Tipo</th>
+<th>Nivel</th>
+<th>Automatización</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TC-025</td>
+<td>Enviar 8 peticiones rápidas en menos de 60 segundos → al menos una responde <strong>429</strong> con <code>RATE_LIMITED</code> (límite de 5 peticiones por minuto por IP)</td>
+<td>P0</td>
+<td>Borde</td>
+<td>integration</td>
+<td>manual</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-026</td>
+<td>Enviar peticiones hasta agotar la cuota diaria de 100 del cliente → la petición siguiente responde <strong>429</strong> con <code>QUOTA_EXCEEDED</code></td>
+<td>P0</td>
+<td>Borde</td>
+<td>integration</td>
+<td>manual</td>
+<td>Correcto</td>
+</tr>
+</tbody></table>
+<h3>4.6 Payload hacia SAE</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Caso</th>
+<th>Prioridad</th>
+<th>Tipo</th>
+<th>Nivel</th>
+<th>Automatización</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TC-027</td>
+<td>Enviar un body válido a una empresa DO → <strong>201</strong> con el envelope de éxito; el worker reporta a SAE con el mapeo correcto (<code>id_det_orden</code> = <code>orderDetailId</code>, <code>detalle_orden</code> = <code>orderDetails</code>, <code>id_contrato</code> = <code>contractId</code>, <code>Cedula</code> = <code>nationalId</code>, <code>Lic</code> = <code>SAE_LICENSE_DO</code>)</td>
+<td>P0</td>
+<td>Mapeo SAE</td>
+<td>integration</td>
+<td>manual</td>
+<td>No ejecutado</td>
+</tr>
+<tr>
+<td>TC-028</td>
+<td>Enviar un body válido a una empresa PE → <strong>201</strong> con el envelope de éxito; el worker reporta a SAE con el mismo mapeo y <code>Lic</code> = <code>SAE_LICENSE_PE</code></td>
+<td>P0</td>
+<td>Mapeo SAE</td>
+<td>integration</td>
+<td>manual</td>
+<td>No ejecutado</td>
+</tr>
+<tr>
+<td>TC-029</td>
+<td>Enviar un body válido a una empresa VE → <strong>201</strong> con el envelope de éxito; el worker reporta a SAE con el mismo mapeo y <code>Lic</code> = <code>SAE_LICENSE_VE</code></td>
+<td>P0</td>
+<td>Mapeo SAE</td>
+<td>integration</td>
+<td>manual</td>
+<td>Correcto</td>
+</tr>
+<tr>
+<td>TC-030</td>
+<td>Enviar un body válido → <strong>201</strong> con el envelope de éxito; el worker envía a SAE los headers <code>Api-Token</code> y <code>Api-Connect</code> correctos para la región</td>
+<td>P0</td>
+<td>Documentado</td>
+<td>integration</td>
+<td>manual</td>
+<td>Correcto</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Registro de Hallazgos</h2>
+<h3>BUG-001 — El servidor responde 500 INTERNAL_ERROR ante un body de más de 100 KB (el límite aplica al body total: orderDetails, orderDetailId o ambos) en vez de un 4xx limpio</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ID</strong></td>
+<td>BUG-001 (caso TC-013)</td>
+</tr>
+<tr>
+<td><strong>Título</strong></td>
+<td>El servidor responde <strong>500 <code>INTERNAL_ERROR</code></strong> ante un body de más de 100 KB — el límite del parser de Express (102400 bytes) aplica al body <strong>total</strong>, por lo que el 500 ocurre sin importar si el exceso viene de <code>orderDetails</code>, <code>orderDetailId</code> o ambos — en vez de rechazarlo con un 4xx limpio (413 o 422)</td>
+</tr>
+<tr>
+<td><strong>Severidad</strong></td>
+<td>Sev2 (alta)</td>
+</tr>
+<tr>
+<td><strong>Esperado</strong></td>
+<td>4xx limpio (413/422) con envelope estándar — el servidor no debe fallar por tamaño de entrada</td>
+</tr>
+<tr>
+<td><strong>Actual</strong></td>
+<td>500 <code>INTERNAL_ERROR</code> — <code>PayloadTooLargeError</code> del body-parser (límite default Express 100 KB) no mapeado por el filtro</td>
+</tr>
+<tr>
+<td><strong>Reproducción</strong></td>
+<td><code>POST /v2/companies/{uuid}/orders</code> con body &gt; 102400 bytes — el exceso se probó con <strong>ambos</strong> campos (orderDetails 60k + orderDetailId 60k ≈ 120 KB); el 500 ocurre igual si el exceso viene solo de <code>orderDetails</code> o solo de <code>orderDetailId</code></td>
+</tr>
+<tr>
+<td><strong>Evidencia — response del servidor</strong></td>
+<td><code>{&quot;data&quot;:null,&quot;error&quot;:{&quot;code&quot;:&quot;INTERNAL_ERROR&quot;,&quot;message&quot;:&quot;Unexpected server error&quot;,&quot;traceId&quot;:&quot;trc-&lt;uuid&gt;&quot;},&quot;meta&quot;:null}</code></td>
+</tr>
+<tr>
+<td><strong>Estado</strong></td>
+<td>En fix</td>
+</tr>
+</tbody></table>
+<h3>BUG-002 — El DTO no valida la longitud de los campos (acepta 5000 caracteres)</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ID</strong></td>
+<td>BUG-002 (caso TC-013)</td>
+</tr>
+<tr>
+<td><strong>Título</strong></td>
+<td>El DTO no limita la longitud de <code>orderDetails</code> ni <code>orderDetailId</code>: una petición con <strong>ambos campos de 5000 caracteres</strong> responde <strong>201</strong> en vez de un rechazo de validación (no tiene <code>@MaxLength</code>)</td>
+</tr>
+<tr>
+<td><strong>Severidad</strong></td>
+<td>Sev3 (baja)</td>
+</tr>
+<tr>
+<td><strong>Esperado</strong></td>
+<td>Rechazo <strong>422 <code>VALIDATION_ERROR</code></strong> cuando un campo supera una longitud máxima razonable (<code>@MaxLength</code> en el DTO)</td>
+</tr>
+<tr>
+<td><strong>Actual</strong></td>
+<td><strong>201</strong> con el envelope de éxito (<code>status: &quot;queued&quot;</code>) — el DTO acepta strings arbitrariamente largos</td>
+</tr>
+<tr>
+<td><strong>Reproducción</strong></td>
+<td><code>POST /v2/companies/{uuid}/orders</code> con <code>orderDetails</code> y <code>orderDetailId</code> de 5000 caracteres cada uno en la misma petición</td>
+</tr>
+<tr>
+<td><strong>Evidencia — response del servidor</strong></td>
+<td><code>{&quot;data&quot;:{&quot;message&quot;:&quot;Order creation process initiated&quot;,&quot;status&quot;:&quot;queued&quot;},&quot;error&quot;:null,&quot;meta&quot;:null}</code></td>
+</tr>
+<tr>
+<td><strong>Estado</strong></td>
+<td>En fix</td>
+</tr>
+</tbody></table>
+<h3>BUG-003 — No existe endpoint para listar o consultar las órdenes</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ID</strong></td>
+<td>BUG-003</td>
+</tr>
+<tr>
+<td><strong>Título</strong></td>
+<td>El microservicio solo permite <strong>crear</strong> órdenes (<code>POST /v2/companies/{companyId}/orders</code>): no existe endpoint para <strong>listar los <code>orderDetailId</code></strong> de una empresa ni para <strong>consultar el estado</strong> de una orden</td>
+</tr>
+<tr>
+<td><strong>Severidad</strong></td>
+<td>Sev2 (media)</td>
+</tr>
+<tr>
+<td><strong>Esperado</strong></td>
+<td>Un endpoint <code>GET /v2/companies/{companyId}/orders</code> (o similar) que liste las órdenes / <code>orderDetailId</code> creadas y/o permita consultar el estado de una orden por <code>orderDetailId</code> o <code>Idempotency-Key</code></td>
+</tr>
+<tr>
+<td><strong>Actual</strong></td>
+<td>No existe — el catálogo de rutas solo expone <code>POST /v2/companies/{companyId}/orders</code> y <code>GET /health</code>; el resultado del procesamiento (éxito o rechazo de SAE) queda en la caché Redis del worker (<code>idempotency:processor:*</code>) sin ningún endpoint que lo exponga</td>
+</tr>
+<tr>
+<td><strong>Reproducción</strong></td>
+<td>Inspección del catálogo de rutas del código auditado (<code>create-order.controller.ts</code> y <code>health.controller.ts</code>): no hay <code>GET</code> de listado ni consulta por <code>orderDetailId</code> / <code>Idempotency-Key</code></td>
+</tr>
+<tr>
+<td><strong>Evidencia — catálogo de rutas</strong></td>
+<td><code>{&quot;endpoints&quot;:[&quot;POST /v2/companies/{companyId}/orders&quot;,&quot;GET /health&quot;]}</code></td>
+</tr>
+<tr>
+<td><strong>Estado</strong></td>
+<td>Asignado</td>
+</tr>
+</tbody></table>
+<h3>BUG-004 — El dato de Licencia no debería existir en el body de creación de órdenes</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ID</strong></td>
+<td>BUG-004</td>
+</tr>
+<tr>
+<td><strong>Título</strong></td>
+<td>El worker inyecta el dato de <strong>Licencia</strong> (<code>Lic</code>) en el body de creación de la orden (<code>create-order.processor.ts</code>) — la licencia SAE es configuración de la empresa, no un dato de la orden</td>
+</tr>
+<tr>
+<td><strong>Severidad</strong></td>
+<td>Sev3 (baja)</td>
+</tr>
+<tr>
+<td><strong>Esperado</strong></td>
+<td>El body de creación solo debe contener datos de la orden (<code>orderDetailId</code>, <code>orderDetails</code>, <code>contractId</code>, <code>nationalId</code>); la licencia debe resolverse/validarse por la empresa destino, no viajar como dato del body</td>
+</tr>
+<tr>
+<td><strong>Actual</strong></td>
+<td>El worker agrega <code>Lic: license</code> al payload SAE — el dato de licencia viaja en el body de la orden (el cliente no lo envía; viene de <code>companies.sae_license</code> en BD o de <code>SAE_LICENSE_{DO,PE,VE}</code> en env)</td>
+</tr>
+<tr>
+<td><strong>Reproducción</strong></td>
+<td>Inspección del worker: <code>create-order.processor.ts</code> construye el payload SAE con <code>Lic: license</code> (línea 102), resuelto de la BD o el env según la empresa</td>
+</tr>
+<tr>
+<td><strong>Evidencia — payload SAE</strong></td>
+<td><code>{&quot;id_det_orden&quot;:&quot;ORD-1001&quot;,&quot;detalle_orden&quot;:&quot;Mantenimiento de fibra&quot;,&quot;id_contrato&quot;:&quot;CONT-9988&quot;,&quot;Cedula&quot;:&quot;V-12345678&quot;,&quot;Lic&quot;:&quot;&lt;license de la empresa&gt;&quot;}</code></td>
+</tr>
+<tr>
+<td><strong>Estado</strong></td>
+<td>Cerrado</td>
+</tr>
+</tbody></table>
+<h3>BUG-005 — El campo nationalId acepta caracteres especiales (guiones) en vez de solo strings numéricos</h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ID</strong></td>
+<td>BUG-005</td>
+</tr>
+<tr>
+<td><strong>Título</strong></td>
+<td>El campo <code>nationalId</code> acepta caracteres especiales como guiones (ej. <code>V-12345678</code>) en vez de rechazarlos con una validación de solo caracteres numéricos</td>
+</tr>
+<tr>
+<td><strong>Severidad</strong></td>
+<td>Sev3 (baja)</td>
+</tr>
+<tr>
+<td><strong>Esperado</strong></td>
+<td>El campo <code>nationalId</code> solo debe aceptar strings numéricos (sin guiones ni caracteres especiales)</td>
+</tr>
+<tr>
+<td><strong>Actual</strong></td>
+<td>Acepta cualquier string, incluyendo guiones y caracteres especiales (ej. <code>V-12345678</code>)</td>
+</tr>
+<tr>
+<td><strong>Reproducción</strong></td>
+<td>Enviar un body con <code>nationalId: "V-12345678"</code> — responde <strong>201</strong> en vez de rechazar con validación</td>
+</tr>
+<tr>
+<td><strong>Evidencia — payload</strong></td>
+<td><code>{&quot;nationalId&quot;:&quot;V-12345678&quot;}</code></td>
+</tr>
+<tr>
+<td><strong>Estado</strong></td>
+<td>Asignado</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Anexo A. Envelopes de respuesta esperados</h2>
+<p>Toda respuesta (éxito o error) va envuelta en <code>{ data, error, meta }</code> con <code>traceId = trc-&lt;uuid&gt;</code>.</p>
+<h3>A.1 201 — Creación aceptada (queued)</h3>
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    &quot;message&quot;: &quot;Order creation process initiated&quot;,
+    &quot;status&quot;: &quot;queued&quot;
+  },
+  &quot;error&quot;: null,
+  &quot;meta&quot;: null
+}
+</code></pre>
+<h3>A.2 422 — VALIDATION_ERROR</h3>
+<pre><code class="language-json">{
+  &quot;data&quot;: null,
+  &quot;error&quot;: {
+    &quot;code&quot;: &quot;VALIDATION_ERROR&quot;,
+    &quot;message&quot;: &quot;The request contains invalid fields.&quot;,
+    &quot;traceId&quot;: &quot;trc-&lt;uuid&gt;&quot;,
+    &quot;details&quot;: [ ... ]
+  },
+  &quot;meta&quot;: null
+}
+</code></pre>
+<h3>A.3 429 — RATE_LIMITED</h3>
+<pre><code class="language-json">{
+  &quot;data&quot;: null,
+  &quot;error&quot;: {
+    &quot;code&quot;: &quot;RATE_LIMITED&quot;,
+    &quot;message&quot;: &quot;Too many requests&quot;,
+    &quot;traceId&quot;: &quot;trc-&lt;uuid&gt;&quot;
+  },
+  &quot;meta&quot;: null
+}
+</code></pre>
+<h3>A.4 429 — QUOTA_EXCEEDED</h3>
+<pre><code class="language-json">{
+  &quot;data&quot;: null,
+  &quot;error&quot;: {
+    &quot;code&quot;: &quot;QUOTA_EXCEEDED&quot;,
+    &quot;message&quot;: &quot;Daily quota of 100 requests exceeded&quot;,
+    &quot;traceId&quot;: &quot;trc-&lt;uuid&gt;&quot;
+  },
+  &quot;meta&quot;: null
+}
+</code></pre>
+<h3>A.5 401 — UNAUTHORIZED</h3>
+<pre><code class="language-json">{
+  &quot;data&quot;: null,
+  &quot;error&quot;: {
+    &quot;code&quot;: &quot;UNAUTHORIZED&quot;,
+    &quot;message&quot;: &quot;Invalid or expired token&quot;,
+    &quot;traceId&quot;: &quot;trc-&lt;uuid&gt;&quot;
+  },
+  &quot;meta&quot;: null
+}
+</code></pre>
+<h3>A.6 400 — Error crudo de Keycloak (SIN envelope)</h3>
+<pre><code class="language-json">{
+  &quot;error&quot;: &quot;invalid_grant&quot;,
+  &quot;error_description&quot;: &quot;Invalid bearer token&quot;
+}
+</code></pre>
+<h3>A.7 404 — Not Found de Express (SIN envelope)</h3>
+<pre><code>Not Found
+</code></pre>
+<h3>A.8 403 — WAF de Cloudflare (SIN envelope)</h3>
+<pre><code>403 Forbidden
+</code></pre>
+<hr>
+
+  </div>
+</body>
+</html>

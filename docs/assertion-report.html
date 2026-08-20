@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Pruebas - Microservicio Ordenes</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    line-height: 1.6;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 40px 24px;
+    text-align: center;
+    color: #fff;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .header .subtitle { font-size: 14px; opacity: 0.75; }
+  .header .timestamp { font-size: 12px; opacity: 0.55; margin-top: 8px; }
+  .status-banner {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    padding: 20px 24px;
+    font-size: 22px; font-weight: 700;
+    color: #fff;
+  }
+  .status-banner.pass { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .status-banner.fail { background: linear-gradient(135deg, #eb3349, #f45c43); }
+  .status-banner .icon { font-size: 32px; font-weight: 400; }
+  .status-banner .stats { font-size: 14px; font-weight: 400; opacity: 0.9; }
+  .global-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px; max-width: 960px; margin: 24px auto; padding: 0 16px;
+  }
+  .stat-card {
+    background: #fff; border-radius: 12px; padding: 20px; text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .stat-card .stat-value { font-size: 32px; font-weight: 800; }
+  .stat-card .stat-label { font-size: 12px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card.pass .stat-value { color: #11998e; }
+  .stat-card.fail .stat-value { color: #eb3349; }
+  .stat-card.total .stat-value { color: #0f3460; }
+  .stat-card.time .stat-value { color: #f39c12; font-size: 24px; }
+  .progress-container { max-width: 960px; margin: 0 auto 24px; padding: 0 16px; }
+  .progress-bar {
+    height: 24px; border-radius: 12px; overflow: hidden;
+    background: #e0e0e0; display: flex;
+  }
+  .progress-bar .pass { background: linear-gradient(90deg, #11998e, #38ef7d); transition: width 0.5s; }
+  .progress-bar .fail { background: linear-gradient(90deg, #eb3349, #f45c43); transition: width 0.5s; }
+  .progress-labels {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: #888; margin-top: 4px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
+  .category-section { margin-top: 32px; margin-bottom: 8px; }
+  .category-title {
+    font-size: 18px; font-weight: 700; color: #0f3460;
+    padding: 12px 20px; background: linear-gradient(135deg, #e8eef6 0%, #f0f4f8 100%);
+    border-left: 4px solid #0f3460; border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .category-section:first-child { margin-top: 0; }
+  .tc-card {
+    background: #fff; border-radius: 16px; margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .tc-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px; cursor: pointer; user-select: none;
+    transition: background 0.15s;
+  }
+  .tc-header:hover { background: #fafafa; }
+  .tc-header .tc-icon { font-weight: 700; font-size: 18px; width: 32px; text-align: center; }
+  .tc-header .tc-icon.pass { color: #11998e; }
+  .tc-header .tc-icon.fail { color: #eb3349; }
+  .tc-header .tc-icon.neutral { color: #95a5a6; }
+  .tc-header .tc-id { font-weight: 700; font-size: 15px; min-width: 100px; }
+  .tc-header .tc-desc { flex: 1; font-size: 14px; color: #555; }
+  .tc-header .tc-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #fff; }
+  .tc-header .tc-badge.pass { background: #11998e; }
+  .tc-header .tc-badge.fail { background: #eb3349; }
+  .tc-header .tc-badge.neutral { background: #95a5a6; }
+  .tc-header .tc-stats { font-size: 12px; color: #888; white-space: nowrap; }
+  .tc-header .tc-toggle { font-size: 12px; color: #ccc; transition: transform 0.2s; }
+  .tc-header .tc-toggle.open { transform: rotate(180deg); }
+  .tc-body { display: none; }
+  .tc-body.open { display: block; }
+  .assertion-table { width: 100%; border-collapse: collapse; }
+  .assertion-table th {
+    text-align: left; padding: 8px 20px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #888; background: #f8f9fa; border-bottom: 1px solid #eee;
+  }
+  .assertion-table td { padding: 10px 20px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+  .assertion-table tr:last-child td { border-bottom: none; }
+  .assertion-table tr:hover { background: #fafbfc; }
+  .assertion-status {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
+  }
+  .assertion-status.pass { background: #e8f5e9; color: #11998e; }
+  .assertion-status.fail { background: #ffe8e8; color: #eb3349; }
+  .assertion-status.neutral { background: #f0f0f0; color: #666; }
+  .assertion-detail { font-size: 12px; color: #888; margin-top: 2px; }
+  .footer { text-align: center; padding: 24px; font-size: 12px; color: #aaa; }
+  @media (max-width: 600px) {
+    .header h1 { font-size: 20px; }
+    .tc-header { flex-wrap: wrap; }
+    .tc-header .tc-id { min-width: auto; }
+    .tc-header .tc-desc { flex-basis: 100%; order: 10; margin-top: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Reporte de Pruebas Automatizadas</h1>
+  <div class="subtitle">Microservicio Ordenes de Reclamo &mdash; API NestJS</div>
+  <div class="timestamp">2026-08-18T19:43:15 &middot; Suite completada en 6.2 min</div>
+</div>
+
+<div class="status-banner fail"><span class="icon">FAIL</span><span>1 CASO(S) FALLARON</span><span class="stats">85/86 aserciones correctas</span></div>
+
+<div class="global-stats">
+  <div class="stat-card pass"><div class="stat-value">85</div><div class="stat-label">Aserciones Pasadas</div></div>
+  <div class="stat-card fail"><div class="stat-value">1</div><div class="stat-label">Aserciones Fallidas</div></div>
+  <div class="stat-card total"><div class="stat-value">86</div><div class="stat-label">Total Aserciones</div></div>
+  <div class="stat-card total"><div class="stat-value">22</div><div class="stat-label">Casos Ejecutados</div></div>
+  <div class="stat-card time"><div class="stat-value">6.2 min</div><div class="stat-label">Duracion Total</div></div>
+</div>
+
+<div class="progress-container">
+  <div class="progress-bar">
+    <div class="pass" style="width:98.84%"></div>
+    <div class="fail" style="width:1.16%"></div>
+  </div>
+  <div class="progress-labels"><span>85 pasadas</span><span>1 fallidas</span></div>
+</div>
+
+<div class="container">
+  <div class="category-section">
+    <h2 class="category-title">Auth / Headers (KeycloakIntrospectionGuard)</h2>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-001&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-001</span>
+      <span class="tc-desc">Validar que una orden válida con Bearer activo responde 201 queued</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">4/4 &middot; 3.0s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-001">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-001">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 201 (Created)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body de la respuesta sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error = null (la peticion se proceso sin errores)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = { message: &quot;Order creation process initiated&quot;, status: &quot;queued&quot; } (orden encolada)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-002&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-002</span>
+      <span class="tc-desc">Validar que sin cabecera Authorization se responde 401 con body {message}</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 0.1s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-002">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-002">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 401 (Unauthorized)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es { message: 'Missing JWT token in request' } (respuesta del guard del despliegue, sin envelope)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-003&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-003</span>
+      <span class="tc-desc">Validar que un Bearer inválido o revocado responde 400 (invalid_grant)</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 0.1s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-003">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-003">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 400 (Bad Request)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es el error crudo de Keycloak (invalid_grant), NO el envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-004&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-004</span>
+      <span class="tc-desc">Validar que un Bearer vacío (solo &quot;Bearer &quot;) responde 400 (invalid_grant)</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 0.1s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-004">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-004">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 400 (Bad Request)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es el error crudo de Keycloak (invalid_grant), NO el envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-005&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-005</span>
+      <span class="tc-desc">Validar que un Bearer malformado (sin prefijo) responde 400 (invalid_grant)</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 57.2s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-005">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-005">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 400 (Bad Request)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es el error crudo de Keycloak (invalid_grant), NO el envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-006&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-006</span>
+      <span class="tc-desc">Validar que sin cabecera Idempotency-Key se responde 422 VALIDATION_ERROR</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">7/7 &middot; 3.5s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-006">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-006">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 422 (Unprocessable Entity)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = null</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.code = 'VALIDATION_ERROR'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.message = 'The request contains invalid fields.'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#5</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.traceId tiene formato trc-&lt;uuid&gt;</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#6</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.details contiene los detalles esperados (campo + mensaje)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#7</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="category-section">
+    <h2 class="category-title">Validación DTO (ValidationPipe + class-validator)</h2>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-008&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-008</span>
+      <span class="tc-desc">Validar que sin el campo orderDetailId se responde 422 VALIDATION_ERROR</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">7/7 &middot; 2.4s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-008">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-008">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 422 (Unprocessable Entity)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = null</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.code = 'VALIDATION_ERROR'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.message = 'The request contains invalid fields.'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#5</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.traceId tiene formato trc-&lt;uuid&gt;</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#6</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.details contiene los detalles esperados (campo + mensaje)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#7</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-009&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-009</span>
+      <span class="tc-desc">Validar que orderDetailId numérico (en vez de texto) responde 422 VALIDATION_ERROR</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">7/7 &middot; 2.8s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-009">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-009">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 422 (Unprocessable Entity)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = null</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.code = 'VALIDATION_ERROR'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.message = 'The request contains invalid fields.'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#5</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.traceId tiene formato trc-&lt;uuid&gt;</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#6</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.details contiene los detalles esperados (campo + mensaje)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#7</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-010&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-010</span>
+      <span class="tc-desc">Validar que una propiedad extra (extraField) responde 422 VALIDATION_ERROR</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">7/7 &middot; 54.5s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-010">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-010">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 422 (Unprocessable Entity)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = null</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.code = 'VALIDATION_ERROR'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.message = 'The request contains invalid fields.'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#5</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.traceId tiene formato trc-&lt;uuid&gt;</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#6</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.details contiene los detalles esperados (campo + mensaje)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#7</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-011&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-011</span>
+      <span class="tc-desc">Validar que nationalId vacío (&quot;&quot;) responde 422 VALIDATION_ERROR</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">7/7 &middot; 1.5s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-011">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-011">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 422 (Unprocessable Entity)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = null</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.code = 'VALIDATION_ERROR'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.message = 'The request contains invalid fields.'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#5</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.traceId tiene formato trc-&lt;uuid&gt;</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#6</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.details contiene los detalles esperados (campo + mensaje)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#7</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-012&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-012</span>
+      <span class="tc-desc">Validar que un body vacío {} responde 422 con los 9 detalles de validación</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">7/7 &middot; 0.7s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-012">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-012">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 422 (Unprocessable Entity)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = null</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.code = 'VALIDATION_ERROR'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.message = 'The request contains invalid fields.'</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#5</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.traceId tiene formato trc-&lt;uuid&gt;</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#6</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error.details contiene los detalles esperados (campo + mensaje)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#7</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-013&quot;)">
+      <span class="tc-icon fail">FAIL</span>
+      <span class="tc-id">TC-013</span>
+      <span class="tc-desc">Validar campos de 5000 chars (aceptados, BUG-003) y body &gt;100KB (rechazado, BUG-002)</span>
+      <span class="tc-badge fail">FAIL</span>
+      <span class="tc-stats">4/5 &middot; 55.6s &middot; 80%</span>
+      <span class="tc-toggle" id="toggle-TC-013">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-013">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>1er request (orderDetails Y orderDetailId ambos 5000 chars): status 201</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>1er request: envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>1er request: error = null</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>1er request: data = { message, status }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status fail">FAIL</span></td>
+            <td><strong>2do request (body &gt; 100 KB, exceso aportado por ambos campos): se rechaza con 4xx limpio, NUNCA 500</strong><div class="assertion-detail">Error: esperado 4xx (rechazo limpio de cliente), recibido 500 — body: {&quot;data&quot;:null,&quot;error&quot;:{&quot;code&quot;:&quot;INTERNAL_ERROR&quot;,&quot;message&quot;:&quot;Unexpected server error&quot;,&quot;traceId&quot;:&quot;trc-6b4447b2-3a13-4681-99bd-31d896756bc6&quot;},&quot;meta&quot;:null} e</div></td>
+            <td style="text-align:center;color:#999;font-size:12px">#5</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div style="padding:12px 20px;background:#fff5f5;border-top:2px solid #eb3349;font-size:13px">
+        <strong>1 asercion(es) fallida(s):</strong>
+        <div style="margin-top:4px;padding-left:16px">* 2do request (body &gt; 100 KB, exceso aportado por ambos campos): se rechaza con 4xx limpio, NUNCA 500 — Error: esperado 4xx (rechazo limpio de cliente), recibido 500 — body: {&quot;data&quot;:null,&quot;error&quot;:{&quot;code&quot;:&quot;INTERNAL_ERROR&quot;,&quot;message&quot;:&quot;Unexpected server error&quot;,&quot;traceId&quot;:&quot;trc-6b4447b2-3a13-4681-99bd-31d896756bc6&quot;},&quot;meta&quot;:null} e</div>
+      </div>
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-014&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-014</span>
+      <span class="tc-desc">Validar que unicode y emojis en orderDetails responden 201</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">4/4 &middot; 2.9s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-014">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-014">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 201 (Created)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body de la respuesta sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error = null (la peticion se proceso sin errores)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = { message: &quot;Order creation process initiated&quot;, status: &quot;queued&quot; } (orden encolada)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-015a&quot;)">
+      <span class="tc-icon neutral">—</span>
+      <span class="tc-id">TC-015a</span>
+      <span class="tc-desc">Validar que nationalId con guión (V-12345678) responde 422 VALIDATION_ERROR</span>
+      <span class="tc-badge neutral">N/E</span>
+      <span class="tc-stats">—</span>
+      <span class="tc-toggle" id="toggle-TC-015a">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-015a">
+      <table class="assertion-table"><tbody>
+        <tr><td><span class="assertion-status neutral">—</span></td><td><strong>No ejecutado</strong><div class="assertion-detail">Sin resultado en results.json (no ejecutado en la corrida)</div></td><td>#—</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-015b&quot;)">
+      <span class="tc-icon neutral">—</span>
+      <span class="tc-id">TC-015b</span>
+      <span class="tc-desc">Validar que nationalId con letras (ABC12345) responde 422 VALIDATION_ERROR</span>
+      <span class="tc-badge neutral">N/E</span>
+      <span class="tc-stats">—</span>
+      <span class="tc-toggle" id="toggle-TC-015b">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-015b">
+      <table class="assertion-table"><tbody>
+        <tr><td><span class="assertion-status neutral">—</span></td><td><strong>No ejecutado</strong><div class="assertion-detail">Sin resultado en results.json (no ejecutado en la corrida)</div></td><td>#—</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+  <div class="category-section">
+    <h2 class="category-title">CompanyValidationPipe (path param)</h2>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-015&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-015</span>
+      <span class="tc-desc">Validar que companyId = código de región (do) responde 404 Not Found</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 0.2s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-015">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-015">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 404 (Not Found)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es &quot;Not Found&quot; de Express en texto plano, sin envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-016&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-016</span>
+      <span class="tc-desc">Validar que companyId UUID no registrado responde 404 Not Found</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 54.1s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-016">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-016">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 404 (Not Found)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es &quot;Not Found&quot; de Express en texto plano, sin envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-017&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-017</span>
+      <span class="tc-desc">Validar que companyId no-UUID (xyz) responde 404 Not Found</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 2.8s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-017">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-017">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 404 (Not Found)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es &quot;Not Found&quot; de Express en texto plano, sin envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-018&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-018</span>
+      <span class="tc-desc">Validar que companyId UUID en MAYÚSCULAS responde 404 Not Found</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 0.2s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-018">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-018">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 404 (Not Found)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es &quot;Not Found&quot; de Express en texto plano, sin envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-019&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-019</span>
+      <span class="tc-desc">Validar que companyId con path traversal responde 403 del WAF</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 3.3s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-019">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-019">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 403 (Forbidden)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body es &quot;403 Forbidden&quot; del WAF de Cloudflare, sin envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="category-section">
+    <h2 class="category-title">Idempotencia HTTP (IdempotencyInterceptor)</h2>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-020&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-020</span>
+      <span class="tc-desc">Validar que la misma Idempotency-Key dos veces devuelve la respuesta cacheada</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">3/3 &middot; 58.5s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-020">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-020">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>1er request: status 201 + envelope estandar (4 aserciones)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>2do request (misma Idempotency-Key): status 201 desde la cache</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body del 2do request es identico al del 1er (misma respuesta en cache)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-021&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-021</span>
+      <span class="tc-desc">Validar que la misma key en empresas DO y PE son independientes (ambas 201)</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">2/2 &middot; 2.3s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-021">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-021">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>1er request (empresa DO): status 201 + envelope estandar</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>2do request (empresa PE, misma Idempotency-Key): status 201 — caches independientes</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-022&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-022</span>
+      <span class="tc-desc">Validar que una Idempotency-Key de 200+ caracteres responde 201</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">4/4 &middot; 57.1s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-022">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-022">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 201 (Created)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body de la respuesta sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error = null (la peticion se proceso sin errores)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = { message: &quot;Order creation process initiated&quot;, status: &quot;queued&quot; } (orden encolada)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+  <div class="tc-card">
+    <div class="tc-header" onclick="toggle(&quot;TC-023&quot;)">
+      <span class="tc-icon pass">PASS</span>
+      <span class="tc-id">TC-023</span>
+      <span class="tc-desc">Validar que una Idempotency-Key con espacios responde 201</span>
+      <span class="tc-badge pass">PASS</span>
+      <span class="tc-stats">4/4 &middot; 0.7s &middot; 100%</span>
+      <span class="tc-toggle" id="toggle-TC-023">▼</span>
+    </div>
+    <div class="tc-body" id="body-TC-023">
+      <table class="assertion-table">
+        <thead><tr><th style="width:80px">Estado</th><th>Asercion</th><th style="width:70px">#</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>La respuesta HTTP tiene status 201 (Created)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#1</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>El body de la respuesta sigue el envelope estandar { data, error, meta }</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#2</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>error = null (la peticion se proceso sin errores)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#3</td>
+          </tr>
+          <tr>
+            <td><span class="assertion-status pass">PASS</span></td>
+            <td><strong>data = { message: &quot;Order creation process initiated&quot;, status: &quot;queued&quot; } (orden encolada)</strong></td>
+            <td style="text-align:center;color:#999;font-size:12px">#4</td>
+          </tr>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+</div>
+
+<script>
+function toggle(id) {
+  var body = document.getElementById('body-' + id);
+  var toggleEl = document.getElementById('toggle-' + id);
+  if (body && toggleEl) {
+    body.classList.toggle('open');
+    toggleEl.classList.toggle('open');
+  }
+}
+setTimeout(function() { toggle('TC-013'); }, 100);
+</script>
+</body>
+</html>
