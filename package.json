@@ -1,0 +1,14 @@
+{
+  "name": "qa-microservicio-ordenes-de-reclamo",
+  "version": "1.0.0",
+  "description": "Framework de pruebas E2E de API para el microservicio de ordenes de reclamo",
+  "scripts": {
+    "test:api": "playwright test -c config/playwright.config.ts",
+    "test:api:report": "node scripts/open-report.mjs",
+    "test:api:reporte": "node scripts/generate-execution-report.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0",
+    "typescript": "^5.5.0"
+  }
+}
