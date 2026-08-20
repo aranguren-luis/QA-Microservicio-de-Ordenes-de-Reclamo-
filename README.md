@@ -144,9 +144,9 @@ bun run test:api:reporte
 
 | Documento | Descripcion | Link |
 |:----------|:------------|:-----|
-| **Reporte QA** | Reporte completo con plan de pruebas y resultados | [Ver Reporte QA](https://aranguren-luis.github.io/QA-Microservicio-de-Ordenes-de-Reclamo-/docs/qa-report.html) |
-| **Reporte de Aserciones** | Detalle PASS/FAIL por caso de prueba | [Ver Reporte de Aserciones](https://aranguren-luis.github.io/QA-Microservicio-de-Ordenes-de-Reclamo-/docs/assertion-report.html) |
-| **Minuta de Pruebas** | Documentacion de sesion de pruebas manuales | [Ver Minuta](https://aranguren-luis.github.io/QA-Microservicio-de-Ordenes-de-Reclamo-/docs/minutes.md) |
+| **Reporte QA** | Reporte completo con plan de pruebas y resultados | [Ver Reporte QA](https://aranguren-luis.github.io/QA-Microservicio-de-Ordenes-de-Reclamo-/qa-report.html) |
+| **Reporte de Aserciones** | Detalle PASS/FAIL por caso de prueba | [Ver Reporte de Aserciones](https://aranguren-luis.github.io/QA-Microservicio-de-Ordenes-de-Reclamo-/assertion-report.html) |
+| **Minuta de Pruebas** | Documentacion de sesion de pruebas manuales | [Ver Minuta](https://aranguren-luis.github.io/QA-Microservicio-de-Ordenes-de-Reclamo-/minutes.html) |
 
 ---
 
